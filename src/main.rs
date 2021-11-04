@@ -45,6 +45,7 @@ fn main() {
         io::stdin()
             .read_line(&mut action)
             .expect("failed to read input");
+        //parse input to usize for indexing
         let action: usize = action
             .trim()
             .parse::<usize>()
