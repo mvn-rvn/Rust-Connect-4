@@ -27,6 +27,10 @@ fn print_grid(grid: &[[String; 7]; 6]) {
     println!("====================");
 }
 
+fn check_wins(grid: &[[String; 7]; 6]) -> bool {
+    false //placeholder
+}
+
 //main
 fn main() {
     //build grid and set turn
