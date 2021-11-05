@@ -2,7 +2,7 @@ use std::io;
 use std::io::Write; //for stdout flushing
 
 //create grid
-#[rustfmt::skip] //rustfmt mangles this, so its being ignored
+#[rustfmt::skip] //rustfmt mangles this, so it's being ignored
 fn build_grid() -> [[String; 7]; 6]  {
     let grid: [[String; 7]; 6] = [
         ["-".to_string(), "-".to_string(), "-".to_string(), "-".to_string(), "-".to_string(), "-".to_string(), "-".to_string()],
