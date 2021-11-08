@@ -1,86 +1,107 @@
+use std::fmt::{Display, Formatter};
 use std::io;
-use std::io::Write; //for stdout flushing
+use std::io::Write;
 
-//create grid
-//REMINDER: grid[y][x]. y coordinate goes from top to bottom
-#[rustfmt::skip] //rustfmt mangles this, so it's being ignored
-fn build_grid() -> [[String; 7]; 6]  {
-    let grid: [[String; 7]; 6] = [
-        ["-".to_string(), "-".to_string(), "-".to_string(), "-".to_string(), "-".to_string(), "-".to_string(), "-".to_string()],
-        ["-".to_string(), "-".to_string(), "-".to_string(), "-".to_string(), "-".to_string(), "-".to_string(), "-".to_string()],
-        ["-".to_string(), "-".to_string(), "-".to_string(), "-".to_string(), "-".to_string(), "-".to_string(), "-".to_string()],
-        ["-".to_string(), "-".to_string(), "-".to_string(), "-".to_string(), "-".to_string(), "-".to_string(), "-".to_string()],
-        ["-".to_string(), "-".to_string(), "-".to_string(), "-".to_string(), "-".to_string(), "-".to_string(), "-".to_string()],
-        ["-".to_string(), "-".to_string(), "-".to_string(), "-".to_string(), "-".to_string(), "-".to_string(), "-".to_string()],
-    ];
-    grid
+const WIDTH: usize = 7;
+const HEIGHT: usize = 6;
+
+#[derive(Copy, Clone, Eq, PartialEq)]
+enum State {
+    Free,
+    X,
+    O,
 }
 
+impl Default for State {
+    fn default() -> Self {
+        State::Free
+    }
+}
+
+impl Display for State {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            State::Free => f.write_str("-"),
+            State::X => f.write_str("X"),
+            State::O => f.write_str("O"),
+        }
+    }
+}
+
+type Grid = [[State; WIDTH]; HEIGHT];
+
 //print grid to console
-fn print_grid(grid: &[[String; 7]; 6]) {
-    println!("\n0 1 2 3 4 5 6");
+fn print_grid(grid: &Grid) {
+    for x in 0..WIDTH {
+        print!("{} ", x); //printing numbers on top
+    }
+
+    println!();
+
     for row in grid {
         for elem in row {
             print!("{} ", elem);
         }
+
         println!();
     }
-    println!("====================");
+
+    println!("====================\n");
 }
 
 //check for wins
-fn win_check(grid: &[[String; 7]; 6]) -> bool {
+fn win_check(grid: &Grid) -> bool {
     //vertical wins
-    for y in 0..grid.len() - 3 {
-        for x in 0..grid[0].len() {
-            let piece = &grid[y][x];
-            if piece != "-"
-                && &grid[y][x] == piece
-                && &grid[y + 1][x] == piece
-                && &grid[y + 2][x] == piece
-                && &grid[y + 3][x] == piece
+    for y in 0..HEIGHT - 3 {
+        for x in 0..WIDTH {
+            let piece = grid[y][x];
+            if piece != State::Free
+                && grid[y][x] == piece
+                && grid[y + 1][x] == piece
+                && grid[y + 2][x] == piece
+                && grid[y + 3][x] == piece
             {
                 return true;
             }
         }
     }
     //horizontal wins
-    for y in 0..grid.len() {
-        for x in 0..grid[0].len() - 3 {
-            let piece = &grid[y][x];
-            if piece != "-"
-                && &grid[y][x] == piece
-                && &grid[y][x + 1] == piece
-                && &grid[y][x + 2] == piece
-                && &grid[y][x + 3] == piece
+    for y in 0..HEIGHT {
+        for x in 0..WIDTH - 3 {
+            let piece = grid[y][x];
+            if piece != State::Free
+                && grid[y][x] == piece
+                && grid[y][x + 1] == piece
+                && grid[y][x + 2] == piece
+                && grid[y][x + 3] == piece
             {
                 return true;
             }
         }
     }
     //diagonal down wins
-    for y in 0..grid.len() - 3 {
-        for x in 0..grid[0].len() - 3 {
-            let piece = &grid[y][x];
-            if piece != "-"
-                && &grid[y][x] == piece
-                && &grid[y + 1][x + 1] == piece
-                && &grid[y + 2][x + 2] == piece
-                && &grid[y + 3][x + 3] == piece
+    for y in 0..HEIGHT - 3 {
+        for x in 0..WIDTH - 3 {
+            let piece = grid[y][x];
+            if piece != State::Free
+                && grid[y][x] == piece
+                && grid[y + 1][x + 1] == piece
+                && grid[y + 2][x + 2] == piece
+                && grid[y + 3][x + 3] == piece
             {
                 return true;
             }
         }
     }
     //diagonal up wins
-    for y in grid.len() - 4..grid.len() {
-        for x in 0..grid.len() - 3 {
-            let piece = &grid[y][x];
-            if piece != "-"
-                && &grid[y][x] == piece
-                && &grid[y - 1][x + 1] == piece
-                && &grid[y - 2][x + 2] == piece
-                && &grid[y - 3][x + 3] == piece
+    for y in HEIGHT - 4..HEIGHT {
+        for x in 0..HEIGHT - 3 {
+            let piece = grid[y][x];
+            if piece != State::Free
+                && grid[y][x] == piece
+                && grid[y - 1][x + 1] == piece
+                && grid[y - 2][x + 2] == piece
+                && grid[y - 3][x + 3] == piece
             {
                 return true;
             }
@@ -91,9 +112,10 @@ fn win_check(grid: &[[String; 7]; 6]) -> bool {
 
 //main
 fn main() {
-    //build grid and set turn
-    let mut grid = build_grid();
-    let mut turn = "X".to_string();
+    // build grid and set turn
+    // REMINDER: grid[y][x]. y coordinate goes from top to bottom
+    let mut grid = Grid::default();
+    let mut turn = State::X;
 
     //main gameloop
     loop {
@@ -120,12 +142,14 @@ fn main() {
         //placing piece
         while !bottom {
             //place piece at the bottom of the column
-            if grid[0][action] == "-" && (row + 1 == grid.len() || grid[row + 1][action] != "-") {
-                grid[row][action] = turn.clone();
+            if grid[0][action] == State::Free
+                && (row + 1 == HEIGHT || grid[row + 1][action] != State::Free)
+            {
+                grid[row][action] = turn;
                 bottom = true;
             }
             //check if column is full
-            else if grid[0][action] != "-" {
+            else if grid[0][action] != State::Free {
                 println!("That column is full.");
                 bottom = true;
             }
@@ -141,10 +165,10 @@ fn main() {
         }
 
         //advancing turn order
-        if turn == "X" {
-            turn = "O".to_string();
-        } else {
-            turn = "X".to_string();
-        }
+        turn = match turn {
+            State::Free => panic!("how did we get here?"),
+            State::X => State::O,
+            State::O => State::X,
+        };
     }
 }
