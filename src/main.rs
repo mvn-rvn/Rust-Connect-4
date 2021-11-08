@@ -2,6 +2,7 @@ use std::io;
 use std::io::Write; //for stdout flushing
 
 //create grid
+//REMINDER: grid[y][x]. y coordinate goes from top to bottom
 #[rustfmt::skip] //rustfmt mangles this, so it's being ignored
 fn build_grid() -> [[String; 7]; 6]  {
     let grid: [[String; 7]; 6] = [
@@ -27,15 +28,72 @@ fn print_grid(grid: &[[String; 7]; 6]) {
     println!("====================");
 }
 
-fn check_wins(grid: &[[String; 7]; 6]) -> bool {
-    false //placeholder
+//check for wins
+fn win_check(grid: &[[String; 7]; 6]) -> bool {
+    //vertical wins
+    for y in 0..grid.len() - 3 {
+        for x in 0..grid[0].len() {
+            let piece = &grid[y][x];
+            if piece != "-"
+                && &grid[y][x] == piece
+                && &grid[y + 1][x] == piece
+                && &grid[y + 2][x] == piece
+                && &grid[y + 3][x] == piece
+            {
+                return true;
+            }
+        }
+    }
+    //horizontal wins
+    for y in 0..grid.len() {
+        for x in 0..grid[0].len() - 3 {
+            let piece = &grid[y][x];
+            if piece != "-"
+                && &grid[y][x] == piece
+                && &grid[y][x + 1] == piece
+                && &grid[y][x + 2] == piece
+                && &grid[y][x + 3] == piece
+            {
+                return true;
+            }
+        }
+    }
+    //diagonal down wins
+    for y in 0..grid.len() - 3 {
+        for x in 0..grid[0].len() - 3 {
+            let piece = &grid[y][x];
+            if piece != "-"
+                && &grid[y][x] == piece
+                && &grid[y + 1][x + 1] == piece
+                && &grid[y + 2][x + 2] == piece
+                && &grid[y + 3][x + 3] == piece
+            {
+                return true;
+            }
+        }
+    }
+    //diagonal up wins
+    for y in grid.len() - 4..grid.len() {
+        for x in 0..grid.len() - 3 {
+            let piece = &grid[y][x];
+            if piece != "-"
+                && &grid[y][x] == piece
+                && &grid[y - 1][x + 1] == piece
+                && &grid[y - 2][x + 2] == piece
+                && &grid[y - 3][x + 3] == piece
+            {
+                return true;
+            }
+        }
+    }
+    false //does not need to be "return false;" because it's the last expression that can be returned
 }
 
 //main
 fn main() {
     //build grid and set turn
     let mut grid = build_grid();
-    let mut turn = String::from("X");
+    let mut turn = "X".to_string();
 
     //main gameloop
     loop {
@@ -76,5 +134,17 @@ fn main() {
         }
 
         //checking for wins
+        if win_check(&grid) {
+            print_grid(&grid);
+            println!("WINNER: {}", turn);
+            break;
+        }
+
+        //advancing turn order
+        if turn == "X" {
+            turn = "O".to_string();
+        } else {
+            turn = "X".to_string();
+        }
     }
 }
